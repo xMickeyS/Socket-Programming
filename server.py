@@ -18,7 +18,7 @@ s_socket.listen()
 sockets_list = [s_socket] # create a list of sockets for select module to keep track
 clients = {} # dict of conneted clients
 
-print(f'Listening for connections on {HOST}:{PORT}...')
+print(f'Bartender is waiting on {HOST}:{PORT}...')
 
 def receive_message(client_socket):
     try:
@@ -63,7 +63,7 @@ while True:
             clients[client_socket] = user
 
             
-            print(f"{user['data'].decode('utf-8')} just landed from {client_address[0]}:{client_address[1]}")
+            print(f"{user['data'].decode('utf-8')} from {client_address[0]}:{client_address[1]} join the table.")
         
         # existing socket
         else:
@@ -72,7 +72,7 @@ while True:
             
             # if client disconnected, cleaup
             if msg is False:
-                print(f"Closed connection form {clients[notified_socket]['data'].decode('utf-8')}")
+                print(f"{clients[notified_socket]['data'].decode('utf-8')} left.")
                 sockets_list.remove(notified_socket)
                 del clients[notified_socket]
                 continue
@@ -81,7 +81,7 @@ while True:
             user = clients[notified_socket]
             username = user['data'].decode('utf8')
 
-            print(f"Received message from {username} : {msg['data'].decode('utf-8')}")
+            print(f"{username} said {msg['data'].decode('utf-8')}")
 
             #  Iterate over connected clients and broadcast message
             for client_socket in clients:
