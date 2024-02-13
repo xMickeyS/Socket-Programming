@@ -10,9 +10,11 @@ CLIENT_FOLDER = 'client_folder'
 c_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 c_socket.connect((IP,PORT))
 
-print("> Client connected.")
+msg = c_socket.recv(1024).decode('utf-8')
+print(f"> {msg}")
+
 while(True):
-    dir_name = input(">>> Enter filename wanting to tranfer (empty input will send all of file in client_folder)\n> ")
+    dir_name = input(f">>> Enter folder wanting to tranfer (empty input will send all of file in {CLIENT_FOLDER} )\n> ")
     if(dir_name != ''):
         if os.path.exists(os.path.join(CLIENT_FOLDER, dir_name)):
             path = os.path.join(CLIENT_FOLDER, dir_name)

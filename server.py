@@ -14,11 +14,12 @@ s_socket.bind((IP, PORT))
 
 ## wait for client to connect
 s_socket.listen()
-print('Server is waiting for client.')
+print('> Server is waiting for client.')
 
 while True:
     conn, address = s_socket.accept() # accept() return coon, new socket object usable to send and receive data, and address (ip, port)
-    print(f"> Client from {address[0]}:{address[1]} connected.")
+    print(f">> Client from {address[0]}:{address[1]} connected.")
+    conn.send(f"200 Client connected.".encode('utf-8'))
 
     # receive the folder name from cilent
     folder_name = conn.recv(1024).decode('utf-8')
@@ -27,9 +28,9 @@ while True:
     path = os.path.join(SERVER_FOLDER, folder_name)
     if not os.path.exists(path):
         os.makedirs(path)
-        conn.send(f"Folder {folder_name} craeted.".encode("utf-8"))
+        conn.send(f"20 Folder {folder_name} craeted.".encode("utf-8"))
     else:
-        conn.send(f"Folder {folder_name} already exits".encode("utf-8"))
+        conn.send(f"25 Folder {folder_name} already exits".encode("utf-8"))
 
     # receiving file
     while True:
@@ -38,20 +39,20 @@ while True:
         cmd, data = msg.split(":")
 
         if cmd == "FILENAME":
-            print(f"> Client Received the filename: {data}.")
+            print(f"> Client sent the filename: {data}.")
             file_path = os.path.join(path, data)
             file = open(file_path, "w")
-            conn.send("Filename received.".encode('utf-8'))
+            conn.send("300 Filename received.".encode('utf-8'))
 
         elif cmd == "DATA":
-            print(f"> Client Receiving the file data.")
+            print(f"> Client receiving the file data.")
             file.write(data)
-            conn.send("File data received".encode('utf-8'))
+            conn.send("301 File data received".encode('utf-8'))
 
         elif cmd == "FINISH":
             file.close()
             print(f"> Client {data}.\n")
-            conn.send(f"{data} is saved on server.".encode('utf-8'))
+            conn.send(f"302 {data} is saved on server.".encode('utf-8'))
 
         elif cmd == "CLOSE":
             conn.close()
