@@ -39,9 +39,6 @@ print("------------------------------------------")
 # send the data
 files = sorted(os.listdir(path)) # listdir returns the list of all files and directories in the specified path. 
 
-directories = [os.path.join(path, f) for f in files if os.path.isdir(os.path.join(path, f))]
-
-print("Directories:", directories)
 # loop in list of all files
 for file_name in files: 
     # send the file name 
