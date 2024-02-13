@@ -1,54 +1,77 @@
+import os
 import socket
-import sys
-import select
-import errno # errno is module (check if can not to receive msg anymore, get that an error)
 
-BUFFER_SIZE = 10    # constant value
-HOST = 'localhost'  # IP of server
+# CONSTANT 
+IP = 'localhost'  # IP of server
 PORT = 1367         # port 
-c_username = input("Howdy! please tell me what your name... : ")
+CLIENT_FOLDER = 'client_folder'
 
 ## create socket
 c_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-c_socket.connect((HOST,PORT))
-c_socket.setblocking(False) 
+c_socket.connect((IP,PORT))
 
-## Prepare username
-username = c_username.encode('utf-8')
-username_header = f"{len(username):<{BUFFER_SIZE}}".encode('utf-8')
-c_socket.send(username_header + username)
+print("> Client connected.")
+while(True):
+    dir_name = input(">>> Enter filename wanting to tranfer (empty input will send all of file in client_folder)\n> ")
+    if(dir_name != ''):
+        if os.path.exists(os.path.join(CLIENT_FOLDER, dir_name)):
+            path = os.path.join(CLIENT_FOLDER, dir_name)
+            folder_name = path.split("/")[-1]
+            break
+        else:
+            print('> The File does not exist.')
+            continue
 
-while True:
-    msg = input(f'{c_username} : ')
+    else: 
+        path = os.path.join(CLIENT_FOLDER)
+        folder_name = path
+        break
+    
 
-    if msg:
-        msg = msg.encode('utf-8')
-        msg_header = f"{len(msg):<{BUFFER_SIZE}}".encode('utf-8')
-        c_socket.send(msg_header + msg)
+# send the file name to server
+print(f'> Client sending folder name : {folder_name}')
+c_socket.send(folder_name.encode('utf-8'))
+# receive reply form the server
+msg = c_socket.recv(1024).decode('utf-8')
+print(f"> {msg} ")
+print("------------------------------------------")
 
-    try:
-        while True:
-            username_header = c_socket.recv(BUFFER_SIZE)
+# send the data
+files = sorted(os.listdir(path)) # listdir returns the list of all files and directories in the specified path. 
 
-            if not len(username_header):
-                print('Bar closed. ( connection closed by the server )')
-                sys.exit()
+directories = [os.path.join(path, f) for f in files if os.path.isdir(os.path.join(path, f))]
 
-            username_length = int(username_header.decode('utf-8').strip())
-            username = c_socket.recv(username_length).decode('utf-8')
-
-            msg_header = c_socket.recv(BUFFER_SIZE)
-            msg_length = int(msg_header.decode('utf-8').strip())
-            msg = c_socket.recv(msg_length).decode('utf-8')
-
-            print(f'{username} : {msg}')
-            
-    except IOError as e:
-        if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
-            print('Reading error: {}'.format(str(e)))
-            sys.exit()
+print("Directories:", directories)
+# loop in list of all files
+for file_name in files: 
+    # send the file name 
+    if os.path.isdir(os.path.join(path, file_name)):
         continue
 
-    except Exception as e:
-        print('Reading error: '.format(str(e)))
-        sys.exit()
+    msg = f"FILENAME:{file_name}"
+    print(f"> Client is sending file name : {file_name}")
+    c_socket.send(msg.encode('utf-8'))
+
+    # receive the reply formm the server
+    msg = c_socket.recv(1024).decode('utf-8')
+    print(f"> {msg} ")
+
+    # sent the data
+    file = open(os.path.join(path, file_name), "r")
+    file_data = file.read()
+
+    msg = f"DATA:{file_data}"
+    c_socket.send(msg.encode('utf-8'))
+    msg = c_socket.recv(1024).decode('utf-8')
+    print(f"> {msg}")
+
+    # close
+    msg = f"FINISH:Complete data send"
+    c_socket.send(msg.encode('utf-8'))
+    msg = c_socket.recv(1024).decode('utf-8')
+    print(f"{msg}\n")
+
+# closing the connection
+msg = f"CLOSE:file transfer is completed"
+c_socket.send(msg.encode('utf-8'))
+c_socket.close()
