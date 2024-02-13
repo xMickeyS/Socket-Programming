@@ -29,7 +29,7 @@ while(True):
     
 
 # send the file name to server
-print(f'> Client sending folder name : {folder_name}')
+print(f'> Client sending folder named {folder_name}')
 c_socket.send(folder_name.encode('utf-8'))
 # receive reply form the server
 msg = c_socket.recv(1024).decode('utf-8')
@@ -51,7 +51,7 @@ for file_name in files:
 
     # receive the reply formm the server
     msg = c_socket.recv(1024).decode('utf-8')
-    print(f"> {msg} ")
+    print(f"> {msg}")
 
     # sent the data
     file = open(os.path.join(path, file_name), "r")
@@ -66,7 +66,7 @@ for file_name in files:
     msg = f"FINISH:Complete data send"
     c_socket.send(msg.encode('utf-8'))
     msg = c_socket.recv(1024).decode('utf-8')
-    print(f"{msg}\n")
+    print(f"> {msg}\n")
 
 # closing the connection
 msg = f"CLOSE:file transfer is completed"
